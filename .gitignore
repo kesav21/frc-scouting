@@ -1,0 +1,7 @@
+
+# ignore virutalenv
+.env
+
+# do not commit this file
+# it has my api key
+config.json
