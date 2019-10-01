@@ -1,5 +1,6 @@
 #!/bin/env python
 
+import sys
 import requests
 import json
 import math
@@ -21,14 +22,9 @@ def main():
     """
 
     # configuration
-
+    event = sys.argv[1]
+    print("event:", event)
     api_key = get_api_key("config.json")
-    event = "2019cc"
-    # event = "2018cc"
-    # event = "2019azfl"
-    # event = "2006wat"
-    # event = "2006nv"
-    # event = "2006dt"
 
     # retrieve event data
 
@@ -57,6 +53,9 @@ def main():
 
     results = get_match_results(match_stats)
     results = parse_match_results(results)
+
+    # verify results
+    # print(results)
 
     # opr calculation
 
