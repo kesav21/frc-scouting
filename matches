@@ -24,7 +24,7 @@ def main():
         matches_url = get_url(api_key, event, "matches")
         matches = requests.get(matches_url).json()
         for match in matches:
-            print(match)
+            print(json.dumps(match))
 
 
 def get_url(api_key, event, endpoint):
