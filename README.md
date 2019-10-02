@@ -1,6 +1,13 @@
 
 # frc scouting
 
-## event_opr.py
+## matches
 
-given the code of an event (from TBA), this file calculates the OPR of all the teams at that event.
+input: the code of (single or multiple) events (from TBA)
+returns: the json data of the matches from those events
+
+## opr
+
+input: json data from (single or multiple) events
+returns: a list of the opr of each team at those events
+
