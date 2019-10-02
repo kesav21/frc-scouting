@@ -7,13 +7,6 @@ import json
 
 def main():
 
-    # read from standard input
-    # k = sys.stdin.readline()
-    # while k is not '':
-    #     k = sys.stdin.readline()
-    #     print(k)
-    # return
-
     # configuration
     events = sys.argv[1:]
     api_key = get_api_key("config.json")
@@ -32,10 +25,6 @@ def get_url(api_key, event, endpoint):
     call = f"event/{event}/{endpoint}"
     url = f"{base_url}/{call}?X-TBA-Auth-Key={api_key}"
     return url
-
-
-def printj(data):
-    print(json.dumps(data, indent=4, sort_keys=True))
 
 
 def get_api_key(file):
