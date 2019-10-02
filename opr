@@ -1,0 +1,118 @@
+#!/bin/env python
+
+import sys
+import json
+import math
+import numpy as np
+import operator
+
+
+def main():
+    """
+    here is the formula used to calculate oprs:
+
+    L * o = r
+    L   len(matches) x len(teams)
+        a matrix containing which teams are participating in which match
+    o   len(teams) x 1
+        a matrix containing the opr of each team
+    r   len(matches) x 1
+        a matrix containing the results of each match
+    """
+
+    # parse input matches
+    matches = get_matches()
+    matches_fil = filter_matches(matches)
+    matches_stats = get_match_stats(matches_fil)
+    matches_sorted = sorted(matches_stats, key=lambda x: x["key"])
+
+    # create teams matrix
+    teams_list = get_teams_list(matches_sorted)
+    teams_matrix = get_teams_matrix(matches_sorted, teams_list)
+
+    # verify teams matrix
+    # for i in range(len(teams_matrix)):
+    #     indices = [i for (i, e) in enumerate(teams_matrix.tolist()[i]) if e == 1]
+    #     for index in indices:
+    #         print(teams_list[index], end=", ")
+    #     print()
+
+    # create results matrix
+    results_matrix = get_match_results(matches_sorted)
+
+    # calculate opr
+    oprs, error, k1, k2 = get_oprs(teams_matrix, results_matrix)
+
+    # pretty print the oprs
+    printo(teams_list, oprs)
+    # average error per team
+    # only print this if asked for
+    # print(math.sqrt(error) / len(teams_list))
+
+
+def printo(teams, oprs):
+    for (team, opr) in sorted(
+        zip(teams, oprs), key=operator.itemgetter(1), reverse=True
+    ):
+        print(f"{team}\t{opr}")
+
+
+def get_oprs(teams, results):
+    return np.linalg.lstsq(teams, results, rcond=None)
+
+
+def get_match_results(matches):
+    return np.array([match["score"] for match in matches]).T
+
+
+def get_teams_matrix(matches, teams_list):
+    return np.array(
+        [[int(team in match["teams"]) for team in teams_list] for match in matches]
+    )
+
+
+def get_teams_list(matches):
+    return sorted(set(team for match in matches for team in match["teams"]))
+
+
+def get_match_stats(matches):
+    for match in matches:
+        for alliance in ["red", "blue"]:
+            yield {
+                "key": match["key"],
+                "teams": get_alliance_teams(match, alliance),
+                "score": match["alliances"][alliance]["score"],
+            }
+
+
+def get_alliance_teams(match, alliance):
+    return [int(key[3:]) for key in match["alliances"][alliance]["team_keys"]]
+
+
+def filter_matches(matches):
+    """
+    we only consider matches:
+    - that are qualification matches
+    - that have ended
+    """
+    for match in matches:
+        if match["comp_level"] == "qm" and not not match["winning_alliance"]:
+            yield match
+
+
+def get_matches():
+    # read from standard input
+    line = sys.stdin.readline()
+    while line is not "":
+        # parse and return line data
+        yield json.loads(line)
+        # update match
+        line = sys.stdin.readline()
+
+
+def printj(data):
+    print(json.dumps(data, indent=4, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()
