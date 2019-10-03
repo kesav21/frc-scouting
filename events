@@ -1,38 +1,56 @@
 #!/bin/env python
 
-import sys
 import json
 import requests
-
-
-# TODO: add flags --team and --year for better control
+import argparse
 
 
 def main():
 
+    # configuration
+    args = get_arguments()
     api_key = get_api_key("config.json")
 
-    endpoint = get_endpoint()
+    # get data
+    endpoint = get_endpoint(args.team, args.year)
     url = get_url(api_key, endpoint)
     events = requests.get(url).json()
 
     for event in events:
-        print(event["key"])
-
-
-def get_endpoint():
-    # if year is not given
-    if len(sys.argv) == 2:
-        return f"team/frc{sys.argv[1]}/events"
-    # if year is given
-    else:
-        return f"team/frc{sys.argv[1]}/events/{sys.argv[2]}"
+        print(event)
 
 
 def get_url(api_key, endpoint):
     base_url = "https://www.thebluealliance.com/api/v3"
     url = f"{base_url}/{endpoint}?X-TBA-Auth-Key={api_key}"
     return url
+
+
+def get_endpoint(team, year):
+
+    # given no arguments
+    if team is None and year is None:
+        raise ValueError("specify at least one argument")
+
+    # given no team but year
+    if team is None and year is not None:
+        return f"events/{year}/keys"
+
+    # given team but no year
+    if team is not None and year is None:
+        return f"team/frc{team}/events/keys"
+
+    # given team and year
+    if team is not None and year is not None:
+        return f"team/frc{team}/events/{year}/keys"
+
+
+def get_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--team", "-t", type=int)
+    parser.add_argument("--year", "-y", type=int)
+    args = parser.parse_args()
+    return args
 
 
 def printj(data):
