@@ -5,23 +5,33 @@ import json
 import requests
 
 
+# TODO: add flags --team and --year for better control
+
+
 def main():
-    team = sys.argv[1]
-    year = sys.argv[2]
 
     api_key = get_api_key("config.json")
 
-    url = get_events_url(api_key, team, year)
-    data = requests.get(url).json()
+    endpoint = get_endpoint()
+    url = get_url(api_key, endpoint)
+    events = requests.get(url).json()
 
-    for event in data:
+    for event in events:
         print(event["key"])
 
 
-def get_events_url(api_key, team, year):
+def get_endpoint():
+    # if year is not given
+    if len(sys.argv) == 2:
+        return f"team/frc{sys.argv[1]}/events"
+    # if year is given
+    else:
+        return f"team/frc{sys.argv[1]}/events/{sys.argv[2]}"
+
+
+def get_url(api_key, endpoint):
     base_url = "https://www.thebluealliance.com/api/v3"
-    call = f"team/frc{team}/events/{year}"
-    url = f"{base_url}/{call}?X-TBA-Auth-Key={api_key}"
+    url = f"{base_url}/{endpoint}?X-TBA-Auth-Key={api_key}"
     return url
 
 
