@@ -12,45 +12,62 @@ def main():
     api_key = get_api_key("config.json")
 
     # get data
-    endpoint = get_endpoint(args.team, args.year)
-    url = get_url(api_key, endpoint)
-    events = requests.get(url).json()
+    endpoints = get_endpoints(args.team, args.year)
+    urls = get_urls(api_key, endpoints)
+    events = get_events(urls)
 
-    for event in events:
-        print(event)
-
-
-def get_url(api_key, endpoint):
-    base_url = "https://www.thebluealliance.com/api/v3"
-    url = f"{base_url}/{endpoint}?X-TBA-Auth-Key={api_key}"
-    return url
+    # print data
+    for i in events:
+        for j in i:
+            print(j)
 
 
-def get_endpoint(team, year):
+def get_events(urls):
+    for url in urls:
+        yield requests.get(url).json()
 
-    # given no arguments
-    if team is None and year is None:
-        raise ValueError("specify at least one argument")
+
+def get_urls(api_key, endpoints):
+    for endpoint in endpoints:
+        base_url = "https://www.thebluealliance.com/api/v3"
+        url = f"{base_url}/{endpoint}?X-TBA-Auth-Key={api_key}"
+        yield url
+
+
+def get_endpoints(team, year):
 
     # given no team but year
     if team is None and year is not None:
-        return f"events/{year}/keys"
+        for y in year:
+            yield f"events/{y}/keys"
 
     # given team but no year
     if team is not None and year is None:
-        return f"team/frc{team}/events/keys"
+        for t in team:
+            yield f"team/frc{t}/events/keys"
 
     # given team and year
     if team is not None and year is not None:
-        return f"team/frc{team}/events/{year}/keys"
+        for y in year:
+            for t in team:
+                yield f"team/frc{t}/events/{y}/keys"
 
 
 def get_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--team", "-t", type=int)
-    parser.add_argument("--year", "-y", type=int)
+    parser.add_argument("--team", "-t", nargs="*", type=int)
+    parser.add_argument("--year", "-y", nargs="*", type=int)
+
     args = parser.parse_args()
+    validate_args(args)
+
     return args
+
+
+def validate_args(args):
+    # given no arguments
+    if args.team is None and args.year is None:
+        parser.error("you must specify at least one argument")
 
 
 def printj(data):
