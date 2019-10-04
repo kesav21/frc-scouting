@@ -12,19 +12,18 @@ def main():
     api_key = get_api_key("config.json")
 
     # get data
-    endpoints = get_endpoints(args.team, args.year)
+    endpoints = get_endpoints(args)
     urls = get_urls(api_key, endpoints)
     events = get_events(urls)
 
     # print data
-    for i in events:
-        for j in i:
-            print(j)
+    for event in events:
+        print(event)
 
 
 def get_events(urls):
     for url in urls:
-        yield requests.get(url).json()
+        yield from requests.get(url).json()
 
 
 def get_urls(api_key, endpoints):
@@ -34,23 +33,22 @@ def get_urls(api_key, endpoints):
         yield url
 
 
-def get_endpoints(team, year):
+def get_endpoints(args):
+
+    team = set(args.team)
+    year = set(args.year)
 
     # given no team but year
     if team is None and year is not None:
-        for y in year:
-            yield f"events/{y}/keys"
+        return (f"events/{y}/keys" for y in year)
 
     # given team but no year
     if team is not None and year is None:
-        for t in team:
-            yield f"team/frc{t}/events/keys"
+        return (f"team/frc{t}/events/keys" for t in team)
 
     # given team and year
     if team is not None and year is not None:
-        for y in year:
-            for t in team:
-                yield f"team/frc{t}/events/{y}/keys"
+        return (f"team/frc{t}/events/{y}/keys" for y in year for t in team)
 
 
 def get_arguments():
