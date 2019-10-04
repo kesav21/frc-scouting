@@ -105,13 +105,9 @@ def get_match_stats(matches):
             "key": match["key"],
             "winner": winner,
             "loser": loser,
-            "red": get_alliance_teams(match, "red"),
-            "blue": get_alliance_teams(match, "blue"),
+            "red": list(get_alliance_teams(match, "red")),
+            "blue": list(get_alliance_teams(match, "blue")),
         }
-
-
-def get_sorted_matches(matches):
-    return sorted(matches, key=lambda x: x["time"])
 
 
 def invert_alliance(alliance):
@@ -123,18 +119,28 @@ def invert_alliance(alliance):
 
 
 def get_alliance_teams(match, alliance):
-    return [int(key[3:]) for key in match["alliances"][alliance]["team_keys"]]
+    for key in match["alliances"][alliance]["team_keys"]:
+        # extract numbers from string
+        yield int("".join(s for s in key if s.isdigit()))
 
 
 def filter_matches(matches):
     """
     we only consider matches:
-    - that have ended
+    - that have a timestamp
+    - that have a winner
     """
     for match in matches:
-        # if match["comp_level"] == "qm" and not not match["winning_alliance"]:
-        if not not match["winning_alliance"]:
+        has_timestamp = not not match["time"]
+        has_ended = not not match["winning_alliance"]
+        # print(has_timestamp)
+        # print(has_ended)
+        if has_timestamp and has_ended:
             yield match
+
+
+def get_sorted_matches(matches):
+    return sorted(matches, key=lambda x: x["time"])
 
 
 def get_matches():
