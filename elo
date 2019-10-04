@@ -1,0 +1,155 @@
+#!/bin/env python
+
+import sys
+import json
+import math
+import numpy as np
+import operator
+
+
+def main():
+    """
+    here is the formula used to calculate oprs:
+
+    L * o = r
+    L   len(matches) x len(teams)
+        a matrix containing which teams are participating in which match
+    o   len(teams) x 1
+        a matrix containing the opr of each team
+    r   len(matches) x 1
+        a matrix containing the results of each match
+    """
+
+    # parse input matches
+    matches = get_matches()
+    matches = filter_matches(matches)
+    matches = get_sorted_matches(matches)
+    matches = list(get_match_stats(matches))
+
+    # generate a list of teams
+    teams_list = get_teams_list(matches)
+    # create initial list of elos
+    elos = get_elo_dict(teams_list)
+    # update elos based on match performance
+    update_all_ratings(matches, elos)
+
+    # pretty print elos
+    printe(elos)
+
+
+def printe(elos):
+    # print(elos)
+    for (team, elo) in sorted(elos.items(), key=operator.itemgetter(1), reverse=True):
+        print(f"{team}\t{elo}")
+
+
+def get_expected_outcome(r1, r2):
+    return 1.0 / (1 + 10 ** ((r2 - r1) / 400.0))
+
+
+def get_new_rating(old_rating, score, expected_score):
+    """
+    win: 1
+    loss: 0
+    """
+    return old_rating + 32 * (score - expected_score)
+
+
+def update_all_ratings(matches, elos):
+    # update elo
+    for match in matches:
+        # calculate alliance rating
+        ratings = {
+            "red": sum(elos[team] for team in match["red"]),
+            "blue": sum(elos[team] for team in match["blue"]),
+        }
+        # calculate expected outcome of a match
+        expected_outcomes = {
+            "red": get_expected_outcome(ratings["red"], ratings["blue"]),
+            "blue": get_expected_outcome(ratings["blue"], ratings["red"]),
+        }
+        # get actual outcome of a match
+        actual_outcomes = {
+            "red": int(match["winner"] == "red"),
+            "blue": int(match["winner"] == "blue"),
+        }
+        # adjust scores
+        for alliance in ["red", "blue"]:
+            for team in match[alliance]:
+                elos[team] = get_new_rating(
+                    elos[team], actual_outcomes[alliance], expected_outcomes[alliance]
+                )
+
+
+def get_elo_dict(teams):
+    starting_elo = 1500
+    return dict(zip(teams, [starting_elo] * len(teams)))
+
+
+def get_teams_list(matches):
+    return sorted(
+        set(
+            team
+            for match in matches
+            for alliance in ["red", "blue"]
+            for team in match[alliance]
+        )
+    )
+
+
+def get_match_stats(matches):
+    for match in matches:
+        winner = match["winning_alliance"]
+        loser = invert_alliance(match["winning_alliance"])
+        yield {
+            "key": match["key"],
+            "winner": winner,
+            "loser": loser,
+            "red": get_alliance_teams(match, "red"),
+            "blue": get_alliance_teams(match, "blue"),
+        }
+
+
+def get_sorted_matches(matches):
+    return sorted(matches, key=lambda x: x["time"])
+
+
+def invert_alliance(alliance):
+    if alliance == "red":
+        return "blue"
+    if alliance == "blue":
+        return "red"
+    raise ValueError("alliance must either red or blue")
+
+
+def get_alliance_teams(match, alliance):
+    return [int(key[3:]) for key in match["alliances"][alliance]["team_keys"]]
+
+
+def filter_matches(matches):
+    """
+    we only consider matches:
+    - that have ended
+    """
+    for match in matches:
+        # if match["comp_level"] == "qm" and not not match["winning_alliance"]:
+        if not not match["winning_alliance"]:
+            yield match
+
+
+def get_matches():
+    # read from standard input
+    line = sys.stdin.readline()
+    while line is not "":
+        # parse and return line data
+        yield json.loads(line)
+        # update match
+        line = sys.stdin.readline()
+
+
+def printj(data):
+    print(json.dumps(data, indent=4, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()
