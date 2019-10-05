@@ -71,12 +71,12 @@ def get_arguments():
     parser.add_argument("--year", "-y", nargs="*", type=int)
 
     args = parser.parse_args()
-    validate_args(args)
+    validate_args(parser, args)
 
     return args
 
 
-def validate_args(args):
+def validate_args(parser, args):
     # given no arguments
     if args.team is None and args.year is None:
         parser.error("you must specify at least one argument")
