@@ -1,10 +1,9 @@
 #!/bin/env python
 
-import sys
 import json
-import math
-import numpy as np
 import operator
+
+from lib import tools
 
 
 def main():
@@ -144,17 +143,8 @@ def get_sorted_matches(matches):
 
 
 def get_matches():
-    # read from standard input
-    line = sys.stdin.readline()
-    while line is not "":
-        # parse and return line data
+    for line in tools.get_stdin():
         yield json.loads(line)
-        # update match
-        line = sys.stdin.readline()
-
-
-def printj(data):
-    print(json.dumps(data, indent=4, sort_keys=True))
 
 
 if __name__ == "__main__":
