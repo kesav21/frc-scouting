@@ -1,28 +1,22 @@
 #!/bin/env python
 
-import json
-import requests
 import argparse
+
+from lib import tools
 
 
 def main():
 
     # configuration
     args = get_arguments()
-    api_key = get_api_key("config.json")
+    api_key = tools.get_api_key("config.json")
 
     # get data
-    url = get_url(api_key, args.endpoint)
-    events = requests.get(url).json()
+    url = tools.get_url(api_key, args.endpoint)
+    events = tools.get_json_data(url)
 
     # print data
-    printj(events)
-
-
-def get_url(api_key, endpoint):
-    base_url = "https://www.thebluealliance.com/api/v3"
-    url = f"{base_url}/{endpoint}?X-TBA-Auth-Key={api_key}"
-    return url
+    tools.printpj(events)
 
 
 def get_arguments():
@@ -30,15 +24,6 @@ def get_arguments():
     parser.add_argument("endpoint")
     args = parser.parse_args()
     return args
-
-
-def printj(data):
-    print(json.dumps(data, indent=4))
-
-
-def get_api_key(file):
-    with open(file, "r") as f:
-        return json.load(f)["api_key"]
 
 
 if __name__ == "__main__":
