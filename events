@@ -15,10 +15,23 @@ def main():
     endpoints = get_endpoints(args)
     urls = get_urls(api_key, endpoints)
     events = get_events(urls)
+    events = filter_events(events)
+    events = get_event_keys(events)
 
     # print data
     for event in events:
         print(event)
+
+
+def get_event_keys(events):
+    for event in events:
+        yield event["key"]
+
+
+def filter_events(events):
+    for event in events:
+        if event["event_type_string"] != "Offseason":
+            yield event
 
 
 def get_events(urls):
