@@ -1,8 +1,5 @@
 #!/bin/env python
 
-import sys
-import requests
-import json
 import argparse
 
 from lib import tools
@@ -14,17 +11,18 @@ def main():
     args = get_arguments()
     api_key = tools.get_api_key("config.json")
 
-    # retrieve matches
+    # get matches
     events = get_events(args)
     urls = get_urls(api_key, events)
     matches = get_matches(urls)
+
     # print matches
     tools.printj(matches)
 
 
 def get_matches(urls):
     for url in urls:
-        yield from requests.get(url).json()
+        yield from tools.get_json_data(url)
 
 
 def get_urls(api_key, events):
