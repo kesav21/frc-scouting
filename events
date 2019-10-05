@@ -48,20 +48,21 @@ def get_urls(api_key, endpoints):
 
 def get_endpoints(args):
 
-    team = set(args.team)
-    year = set(args.year)
-
     # given no team but year
-    if team is None and year is not None:
-        return (f"events/{y}/keys" for y in year)
+    if args.team is None and args.year is not None:
+        year = set(args.year)
+        return (f"events/{y}" for y in year)
 
     # given team but no year
-    if team is not None and year is None:
-        return (f"team/frc{t}/events/keys" for t in team)
+    if args.team is not None and args.year is None:
+        team = set(args.team)
+        return (f"team/frc{t}/events" for t in team)
 
     # given team and year
-    if team is not None and year is not None:
-        return (f"team/frc{t}/events/{y}/keys" for y in year for t in team)
+    if args.team is not None and args.year is not None:
+        team = set(args.team)
+        year = set(args.year)
+        return (f"team/frc{t}/events/{y}" for y in year for t in team)
 
 
 def get_arguments():
