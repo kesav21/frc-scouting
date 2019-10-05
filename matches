@@ -4,6 +4,8 @@ import sys
 import requests
 import json
 
+# TODO: add flags to matches to either accept standard input or accept direct arguments
+
 
 def main():
 
