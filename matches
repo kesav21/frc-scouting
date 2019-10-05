@@ -3,30 +3,98 @@
 import sys
 import requests
 import json
-
-# TODO: add flags to matches to either accept standard input or accept direct arguments
+import argparse
 
 
 def main():
 
     # configuration
-    events = sys.argv[1:]
+    args = get_arguments()
     api_key = get_api_key("config.json")
 
-    # retrieve event data
+    # retrieve matches
+    events = get_events(args)
+    urls = get_urls(api_key, events)
+    matches = get_matches(urls)
+    # print matches
+    printj(matches)
 
+
+def get_matches(urls):
+    for url in urls:
+        yield from requests.get(url).json()
+
+
+def get_urls(api_key, events):
     for event in events:
-        matches_url = get_url(api_key, event, "matches")
-        matches = requests.get(matches_url).json()
-        for match in matches:
-            print(json.dumps(match))
+        yield get_url(api_key, f"event/{event}/matches")
 
 
-def get_url(api_key, event, endpoint):
+def get_events(args):
+    # if accepting cmd args
+    if args.events != []:
+        return args.events
+    # if accepting standard input
+    if args.input:
+        return list(get_events_stdin())
+
+
+def get_events_stdin():
+    for line in get_stdin():
+        yield line.strip("\n")
+
+
+def get_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "events", nargs="*", type=str, help="accept command line arguments"
+    )
+    parser.add_argument(
+        "--input", "-i", action="store_true", help="accept standard input"
+    )
+
+    args = parser.parse_args()
+    validate_args(parser, args)
+
+    return args
+
+
+def validate_args(parser, args):
+    # given no arguments
+    if args.input is False and args.events == []:
+        parser.error("you must specify one argument")
+    # given both arguments
+    if args.input is True and args.events != []:
+        parser.error("you must specify only one argument")
+
+
+# tools
+
+
+def get_url(api_key, endpoint):
     base_url = "https://www.thebluealliance.com/api/v3"
-    call = f"event/{event}/{endpoint}"
-    url = f"{base_url}/{call}?X-TBA-Auth-Key={api_key}"
+    url = f"{base_url}/{endpoint}?X-TBA-Auth-Key={api_key}"
     return url
+
+
+def get_stdin():
+    # read from standard input
+    line = sys.stdin.readline()
+    while line is not "":
+        # return raw line data
+        yield line
+        # update match
+        line = sys.stdin.readline()
+
+
+def printj(l):
+    for element in l:
+        print(json.dumps(element))
+
+
+def printl(l):
+    for element in l:
+        print(element)
 
 
 def get_api_key(file):
